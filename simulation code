@@ -1,0 +1,241 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+
+typedef struct {
+    char username[20];
+    char password[20];
+    char role[10];
+} User;
+
+typedef struct {
+    int id;
+    char name[50];
+    float marks;
+} Student;
+
+Student queue[MAX];
+int front = 0, rear = -1, count = 0;
+
+// ---------------- QUEUE OPERATIONS ----------------
+
+int isFull()  { return count == MAX; }
+int isEmpty() { return count == 0; }
+
+void enqueue(Student s) {
+    if (isFull()) {
+        printf("\nQueue full! Cannot add student.\n");
+        return;
+    }
+    rear = (rear + 1) % MAX;
+    queue[rear] = s;
+    count++;
+}
+
+void dequeue() {
+    if (isEmpty()) {
+        printf("\nQueue empty! No student to remove.\n");
+        return;
+    }
+    front = (front + 1) % MAX;
+    count--;
+}
+
+// Find index in circular queue
+int findIndexById(int id) {
+    if (isEmpty()) return -1;
+    int i, pos = front;
+    for (i = 0; i < count; i++) {
+        if (queue[pos].id == id)
+            return pos;
+        pos = (pos + 1) % MAX;
+    }
+    return -1;
+}
+
+// Delete student from any position
+void deleteById(int id) {
+    int idx = findIndexById(id);
+    if (idx == -1) {
+        printf("\nStudent not found.\n");
+        return;
+    }
+
+    int i = idx;
+    while (i != rear) {
+        int next = (i + 1) % MAX;
+        queue[i] = queue[next];
+        i = next;
+    }
+    rear = (rear - 1 + MAX) % MAX;
+    count--;
+
+    printf("\nStudent deleted.\n");
+}
+
+// ---------------- CRUD OPERATIONS ----------------
+
+void displayStudents() {
+    if (isEmpty()) {
+        printf("\nNo students available.\n");
+        return;
+    }
+    printf("\nID\tNAME\tMARKS\n");
+
+    int i, pos = front;
+    for (i = 0; i < count; i++) {
+        printf("%d\t%s\t%.2f\n", queue[pos].id, queue[pos].name, queue[pos].marks);
+        pos = (pos + 1) % MAX;
+    }
+}
+
+void addStudent() {
+    Student s;
+    printf("\nEnter ID: ");
+    scanf("%d", &s.id);
+    printf("Enter Name: ");
+    scanf("%s", s.name);
+    printf("Enter Marks: ");
+    scanf("%f", &s.marks);
+
+    enqueue(s);
+    printf("\nStudent added.\n");
+}
+
+void searchStudent() {
+    int id;
+    printf("\nEnter ID to search: ");
+    scanf("%d", &id);
+
+    int idx = findIndexById(id);
+    if (idx == -1) {
+        printf("\nStudent not found.\n");
+        return;
+    }
+
+    printf("\nID: %d\nName: %s\nMarks: %.2f\n",
+           queue[idx].id, queue[idx].name, queue[idx].marks);
+}
+
+void updateStudent() {
+    int id;
+    printf("\nEnter ID to update: ");
+    scanf("%d", &id);
+
+    int idx = findIndexById(id);
+    if (idx == -1) {
+        printf("\nStudent not found.\n");
+        return;
+    }
+
+    printf("Enter new name: ");
+    scanf("%s", queue[idx].name);
+    printf("Enter new marks: ");
+    scanf("%f", &queue[idx].marks);
+
+    printf("\nStudent updated.\n");
+}
+
+// ---------------- MENUS & LOGIN ----------------
+
+void adminMenu() {
+    int ch;
+    do {
+        printf("\n=== ADMIN MENU ===\n1.Add\n2.Display\n3.Search\n4.Update\n5.Delete\n6.Logout\n");
+        scanf("%d", &ch);
+        if (ch == 1) addStudent();
+        else if (ch == 2) displayStudents();
+        else if (ch == 3) searchStudent();
+        else if (ch == 4) updateStudent();
+        else if (ch == 5) {
+            int id;
+            printf("Enter ID to delete: ");
+            scanf("%d", &id);
+            deleteById(id);
+        }
+    } while (ch != 6);
+}
+
+void staffMenu() {
+    int ch;
+    do {
+        printf("\n=== STAFF MENU ===\n1.Display\n2.Search\n3.Update\n4.Logout\n");
+        scanf("%d", &ch);
+        if (ch == 1) displayStudents();
+        else if (ch == 2) searchStudent();
+        else if (ch == 3) updateStudent();
+    } while (ch != 4);
+}
+
+void userMenu() {
+    int ch;
+    do {
+        printf("\n=== USER MENU ===\n1.Display\n2.Search\n3.Logout\n");
+        scanf("%d", &ch);
+        if (ch == 1) displayStudents();
+        else if (ch == 2) searchStudent();
+    } while (ch != 3);
+}
+
+void guestMenu() {
+    int ch;
+    do {
+        printf("\n=== GUEST MENU ===\n1.Display\n2.Logout\n");
+        scanf("%d", &ch);
+        if (ch == 1) displayStudents();
+    } while (ch != 2);
+}
+
+int login(User users[], int n, User *loggedIn) {
+    char u[20], p[20];
+    printf("\nUsername: "); scanf("%s", u);
+    printf("Password: "); scanf("%s", p);
+
+    for (int i = 0; i < n; i++) {
+        if (!strcmp(u, users[i].username) && !strcmp(p, users[i].password)) {
+            *loggedIn = users[i];
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// ---------------- MAIN ----------------
+
+int main() {
+
+    User users[] = {
+        {"admin", "admin123", "ADMIN"},
+        {"staff", "staff666", "STAFF"},
+        {"guest", "guest111", "GUEST"},
+        {"user", "user123", "USER"}
+    };
+
+    // initial preloaded students
+    Student s[] = {
+        {1002, "SHRAVAN", 560},
+        {1003, "Rayalu", 580},
+        {1004, "Pks",    585},
+        {1005, "Mahesh", 589},
+        {1006, "Suresh", 499}
+    };
+    for (int i = 0; i < 5; i++) enqueue(s[i]);
+
+    while (1) {
+        User current;
+        if (!login(users, 4, &current)) {
+            printf("\nInvalid credentials.\n");
+            continue;
+        }
+
+        printf("\nLogged in as %s (%s)\n", current.username, current.role);
+
+        if (!strcmp(current.role, "ADMIN")) adminMenu();
+        else if (!strcmp(current.role, "STAFF")) staffMenu();
+        else if (!strcmp(current.role, "GUEST")) guestMenu();
+        else userMenu();
+    }
+
+    return 0;
+}
