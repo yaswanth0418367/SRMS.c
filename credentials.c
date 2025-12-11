@@ -1,4 +1,4 @@
-Mahesh mahesh123 ADMIN
-Bob bob0783 USER
-Yaswanth yaswanth1 STAFF
-Bhargav bhargav89 GUEST
+admin admin123 ADMIN
+user user123 USER
+staff staff123 STAFF
+guest guest123 GUEST
